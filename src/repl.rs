@@ -1,4 +1,4 @@
-use crate::lexer::Lexer;
+use crate::{lexer::Lexer, parser::Parser};
 
 use std::io;
 
@@ -10,10 +10,19 @@ pub fn start<R: io::BufRead, W: io::Write>(mut reader: R, mut writer: W) -> io::
         writer.flush()?;
         let mut line = String::new();
         reader.read_line(&mut line)?;
-        let l = Lexer::new(&line);
 
-        for tok in l {
-            println!("{:?}", tok)
+        let l = Lexer::new(&line);
+        let mut p = Parser::new(l);
+
+        let program = p.parse_program();
+        let errors = p.errors();
+        if errors.len() != 0 {
+            for error in errors {
+                write!(writer, "\t{}\t\n", error)?;
+            }
+            continue;
         }
+
+        write!(writer, "{}\n", program)?;
     }
 }
