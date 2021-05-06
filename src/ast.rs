@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub enum Statement {
     Let(String, Expression),
     Return(Expression),
@@ -20,7 +20,7 @@ impl fmt::Display for Statement {
     }
 }
 
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub enum Expression {
     Identifier(String),
     Integer(isize),
@@ -73,7 +73,7 @@ impl fmt::Display for Expression {
     }
 }
 
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub struct Program {
     pub statements: Vec<Statement>,
 }
@@ -98,7 +98,7 @@ impl Program {
 
 pub type BlockStatement = Program;
 
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub enum Prefix {
     MINUS, // -
     BANG,  // !
@@ -117,7 +117,7 @@ impl fmt::Display for Prefix {
     }
 }
 
-#[derive(Hash, PartialEq, Eq, Debug)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub enum Infix {
     PLUS,     // +
     MINUS,    // -
@@ -148,7 +148,7 @@ impl fmt::Display for Infix {
     }
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct HashLiteral {
     pub pairs: HashMap<Expression, Expression>,
 }
