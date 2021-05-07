@@ -3,7 +3,6 @@ use crate::{
     lexer::Lexer,
     token::Token,
 };
-
 use std::{collections::HashMap, iter::Peekable};
 
 #[derive(PartialEq, PartialOrd)]

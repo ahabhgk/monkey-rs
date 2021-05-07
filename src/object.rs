@@ -1,5 +1,4 @@
 use crate::{ast::BlockStatement, environment::Environment, evaluator::EvalError};
-
 use std::{cell::RefCell, collections::HashMap, fmt, hash::Hash, hash::Hasher, rc::Rc};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

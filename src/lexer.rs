@@ -1,5 +1,4 @@
 use crate::token::{lookup_ident, Token};
-
 use std::{iter::Peekable, str::Chars};
 
 fn is_letter(ch: char) -> bool {

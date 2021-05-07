@@ -1,5 +1,4 @@
 use monkey_rs::repl;
-
 use std::io;
 
 fn main() -> io::Result<()> {

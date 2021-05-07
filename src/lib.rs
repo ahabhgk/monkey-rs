@@ -1,8 +1,9 @@
-mod ast;
-mod environment;
-mod evaluator;
-mod lexer;
-mod object;
-mod parser;
+pub mod ast;
+pub mod environment;
+pub mod evaluator;
+pub mod lexer;
+pub mod object;
+pub mod parser;
 pub mod repl;
-mod token;
+pub mod token;
+pub mod wasm;

@@ -1,5 +1,4 @@
 use crate::{environment::Environment, evaluator::Evaluator, lexer::Lexer, parser::Parser};
-
 use std::{io, rc::Rc};
 
 const PROMPT: &'static str = ">> ";

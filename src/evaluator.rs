@@ -3,7 +3,6 @@ use crate::{
     environment::Environment,
     object::{Builtin, Function, HashObject, Object},
 };
-
 use std::{cell::RefCell, collections::HashMap, fmt, rc::Rc};
 
 #[derive(Debug)]

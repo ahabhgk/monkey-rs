@@ -1,5 +1,4 @@
 use crate::object::Object;
-
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 #[derive(Debug, PartialEq, Eq)]
