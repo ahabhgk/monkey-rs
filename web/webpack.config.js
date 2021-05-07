@@ -4,7 +4,7 @@ const path = require('path');
 module.exports = {
   entry: "./bootstrap.js",
   output: {
-    publicPath: '/monkey-rs/',
+    publicPath: process.env.NODE_ENV === 'production' ? '/monkey-rs/' : '/',
     path: path.resolve(__dirname, "dist"),
     filename: "bootstrap.js",
   },
@@ -12,4 +12,7 @@ module.exports = {
   plugins: [
     new CopyWebpackPlugin(['index.html'])
   ],
+  devServer: {
+    writeToDisk: true,
+  },
 };
