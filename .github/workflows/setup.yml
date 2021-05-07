@@ -12,11 +12,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: build
+    - name: install wasm-pack
+      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+    - name: build wasm
+      run: wasm-pack build --target web
+
+    - name: build playground
       run: cd ./web && yarn install && yarn build && cd ..
 
     - name: deploy
       uses: peaceiris/actions-gh-pages@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        github_token: ${{ secrets.DEPLOY_TOKEN }}
         publish_dir: ./web
