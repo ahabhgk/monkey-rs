@@ -1,13 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
+    <meta charset="utf-8">
+    <title>Hello wasm-pack!</title>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
+
+    <div>
+      <textarea class="input" cols="100" rows="30"></textarea>
+    </div>
+    <div>
+      <button class="run">run code</button>
+    </div>
+    <div class="output"></div>
+
+    <script src="./bootstrap.js"></script>
   </body>
 </html>
