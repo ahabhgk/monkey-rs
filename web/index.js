@@ -69,6 +69,13 @@ let map = fn(arr, f) {
 let arr = [1, 2, 3, 4];
 let double = fn(x) { x * 2 };
 map(arr, double)`,
+
+  'Cons in SICP':
+`let cons = fn(first, second) { fn(pick) { pick(first, second) } }
+let car = fn(pair) { pair(fn(first, second) { first }) }
+let cdr = fn(pair) { pair(fn(first, second) { second }) }
+let pair = cons(1, 2)
+{ "car": car(pair), "cdr": cdr(pair) }`,
 }
 
 $select.innerHTML = Object.keys(snippets)
