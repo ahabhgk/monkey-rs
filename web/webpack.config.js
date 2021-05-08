@@ -1,14 +1,15 @@
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const path = require('path');
+const isProduction = process.env.NODE_ENV === 'production'
 
 module.exports = {
   entry: "./bootstrap.js",
   output: {
-    publicPath: process.env.NODE_ENV === 'production' ? '/monkey-rs/' : '/',
+    publicPath: isProduction ? '/monkey-rs/' : '/',
     path: path.resolve(__dirname, "dist"),
     filename: "bootstrap.js",
   },
-  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
+  mode: isProduction ? 'production' : 'development',
   plugins: [
     new CopyWebpackPlugin(['index.html'])
   ],
