@@ -85,6 +85,10 @@ $select.innerHTML = Object.keys(snippets)
 $select.addEventListener('change', e => {
   const code = snippets[$select.value]
   $input.value = code
+  
+  // dispatch an input event to update the hash
+  const event = new Event('input')
+  $input.dispatchEvent(event)
 })
 
 $run.addEventListener('click', e => {
@@ -92,3 +96,12 @@ $run.addEventListener('click', e => {
   const output = wasm.run(code)
   $output.textContent = output
 })
+
+$input.addEventListener('input', e => {
+  const snapshot = getSnapshot($input.value)
+  window.location.hash = snapshot
+})
+
+function getSnapshot(code) {
+  return encodeURIComponent(JSON.stringify({ code }))
+}
