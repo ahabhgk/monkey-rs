@@ -1,5 +1,8 @@
 use crate::{
-    ast::{BlockStatement, Expression, HashLiteral, Infix, Prefix, Program, Statement},
+    ast::{
+        BlockStatement, Expression, HashLiteral, Infix, Prefix, Program,
+        Statement,
+    },
     lexer::Lexer,
     token::Token,
 };
@@ -32,7 +35,8 @@ impl From<&Token> for Precedence {
 }
 
 type PrefixParseFn = fn(parser: &mut Parser) -> Option<Expression>;
-type InfixParseFn = fn(parser: &mut Parser, left: Expression) -> Option<Expression>;
+type InfixParseFn =
+    fn(parser: &mut Parser, left: Expression) -> Option<Expression>;
 
 pub struct Parser<'a> {
     lexer: Peekable<Lexer<'a>>,
@@ -150,7 +154,9 @@ impl<'a> Parser<'a> {
 
     fn parse_identifier(parser: &mut Parser) -> Option<Expression> {
         match &parser.cur_token {
-            Token::IDENT(ident) => Some(Expression::Identifier(ident.to_string())),
+            Token::IDENT(ident) => {
+                Some(Expression::Identifier(ident.to_string()))
+            }
             _ => None,
         }
     }
@@ -167,7 +173,9 @@ impl<'a> Parser<'a> {
 
     fn parse_string(parser: &mut Parser) -> Option<Expression> {
         match &parser.cur_token {
-            Token::STRING(string) => Some(Expression::String(string.to_string())),
+            Token::STRING(string) => {
+                Some(Expression::String(string.to_string()))
+            }
             _ => None,
         }
     }
@@ -202,7 +210,10 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_infix(parser: &mut Parser, left: Expression) -> Option<Expression> {
+    fn parse_infix(
+        parser: &mut Parser,
+        left: Expression,
+    ) -> Option<Expression> {
         let infix = match &parser.cur_token {
             Token::PLUS => Infix::PLUS,
             Token::MINUS => Infix::MINUS,
@@ -219,12 +230,17 @@ impl<'a> Parser<'a> {
         parser.next_token();
 
         match parser.parse_expression(cur_precedence) {
-            Some(right) => Some(Expression::Infix(Box::new(left), infix, Box::new(right))),
+            Some(right) => {
+                Some(Expression::Infix(Box::new(left), infix, Box::new(right)))
+            }
             _ => None,
         }
     }
 
-    fn parse_index(parser: &mut Parser, left: Expression) -> Option<Expression> {
+    fn parse_index(
+        parser: &mut Parser,
+        left: Expression,
+    ) -> Option<Expression> {
         parser.next_token();
 
         if let Some(right) = parser.parse_expression(Precedence::LOWEST) {
@@ -330,7 +346,8 @@ impl<'a> Parser<'a> {
             hash.pairs.insert(key.unwrap(), value.unwrap());
 
             if let Some(token) = parser.lexer.peek() {
-                if *token != Token::RBRACE && !parser.expect_peek(&Token::COMMA) {
+                if *token != Token::RBRACE && !parser.expect_peek(&Token::COMMA)
+                {
                     return None;
                 }
             }
@@ -362,7 +379,10 @@ impl<'a> Parser<'a> {
         Some(Expression::Function(params.unwrap(), body))
     }
 
-    fn parse_expression_list(&mut self, expected: &Token) -> Option<Vec<Expression>> {
+    fn parse_expression_list(
+        &mut self,
+        expected: &Token,
+    ) -> Option<Vec<Expression>> {
         let mut args = vec![];
 
         if let Some(token) = self.lexer.peek() {
@@ -399,7 +419,10 @@ impl<'a> Parser<'a> {
         Some(args)
     }
 
-    fn parse_expression(&mut self, precedence: Precedence) -> Option<Expression> {
+    fn parse_expression(
+        &mut self,
+        precedence: Precedence,
+    ) -> Option<Expression> {
         let opt_left = match Parser::prefix_parse_fn(&self.cur_token) {
             Some(prefix) => prefix(self),
             _ => {
@@ -413,7 +436,9 @@ impl<'a> Parser<'a> {
 
         if let Some(mut left) = opt_left {
             while let Some(peek_token) = self.lexer.peek() {
-                if *peek_token != Token::SEMICOLON && precedence < Precedence::from(peek_token) {
+                if *peek_token != Token::SEMICOLON
+                    && precedence < Precedence::from(peek_token)
+                {
                     let infix = match Parser::infix_parse_fn(&peek_token) {
                         Some(infix) => infix,
                         _ => break,
@@ -642,7 +667,9 @@ mod parser_test {
     fn is_expression_literal(expr: &Expression, expected: &Literal) -> bool {
         match expected {
             Literal::Integer(integer) => is_expression_integer(expr, *integer),
-            Literal::Identifier(identifier) => is_expression_identifier(expr, identifier),
+            Literal::Identifier(identifier) => {
+                is_expression_identifier(expr, identifier)
+            }
             Literal::Boolean(boolean) => is_expression_boolean(expr, *boolean),
         }
     }
@@ -747,7 +774,9 @@ return 993322;";
         for stmt in &program.statements {
             match stmt {
                 Statement::Expression(expr) => match expr {
-                    Expression::Identifier(ident) => assert_eq!(ident, "foobar"),
+                    Expression::Identifier(ident) => {
+                        assert_eq!(ident, "foobar")
+                    }
                     _ => assert!(false, "Expression is not Ident"),
                 },
                 _ => assert!(false, "Statement is not Expression"),
@@ -791,7 +820,9 @@ return 993322;";
         for stmt in &program.statements {
             match stmt {
                 Statement::Expression(expr) => match expr {
-                    Expression::String(string) => assert_eq!(string, "hello world"),
+                    Expression::String(string) => {
+                        assert_eq!(string, "hello world")
+                    }
                     _ => assert!(false, "Expression is not String"),
                 },
                 _ => assert!(false, "Statement is not Expression"),
@@ -826,13 +857,22 @@ return 993322;";
                         for (key, value) in &hash.pairs {
                             match key {
                                 Expression::String(string) => {
-                                    if let Some(expected_value) = expected.get(string) {
+                                    if let Some(expected_value) =
+                                        expected.get(string)
+                                    {
                                         assert_eq!(
-                                            is_expression_integer(value, *expected_value),
+                                            is_expression_integer(
+                                                value,
+                                                *expected_value
+                                            ),
                                             true
                                         );
                                     } else {
-                                        assert!(false, "{} is not expected", string);
+                                        assert!(
+                                            false,
+                                            "{} is not expected",
+                                            string
+                                        );
                                     }
                                 }
                                 _ => assert!(false, "{} is not String", *key),
@@ -862,7 +902,13 @@ return 993322;";
                 Statement::Expression(expr) => match expr {
                     Expression::Array(array) => {
                         assert_eq!(array.len(), 3);
-                        assert_eq!(is_expression_literal(&array[0], &Literal::Integer(1)), true);
+                        assert_eq!(
+                            is_expression_literal(
+                                &array[0],
+                                &Literal::Integer(1)
+                            ),
+                            true
+                        );
                         assert_eq!(
                             is_expression_infix(
                                 &array[1],
@@ -923,10 +969,16 @@ return 993322;";
                                     ),
                                     true
                                 ),
-                                _ => assert!(false, "Statement is not Expression"),
+                                _ => assert!(
+                                    false,
+                                    "Statement is not Expression"
+                                ),
                             };
 
-                            assert!(alternative.is_none(), "alternative should be none");
+                            assert!(
+                                alternative.is_none(),
+                                "alternative should be none"
+                            );
                         } else {
                             assert!(false, "no statement in consequence");
                         }
@@ -972,26 +1024,44 @@ return 993322;";
                                     ),
                                     true
                                 ),
-                                _ => assert!(false, "Statement is not Expression"),
+                                _ => assert!(
+                                    false,
+                                    "Statement is not Expression"
+                                ),
                             };
 
                             if let Some(alternative) = alternative {
-                                if let Some(stmt) = alternative.statements.first() {
+                                if let Some(stmt) =
+                                    alternative.statements.first()
+                                {
                                     match stmt {
-                                        Statement::Expression(expr) => assert_eq!(
-                                            is_expression_literal(
-                                                expr,
-                                                &Literal::Identifier("y".to_string())
-                                            ),
-                                            true
+                                        Statement::Expression(expr) => {
+                                            assert_eq!(
+                                                is_expression_literal(
+                                                    expr,
+                                                    &Literal::Identifier(
+                                                        "y".to_string()
+                                                    )
+                                                ),
+                                                true
+                                            )
+                                        }
+                                        _ => assert!(
+                                            false,
+                                            "Statement is not Expression"
                                         ),
-                                        _ => assert!(false, "Statement is not Expression"),
                                     };
                                 } else {
-                                    assert!(false, "no statement in alternative");
+                                    assert!(
+                                        false,
+                                        "no statement in alternative"
+                                    );
                                 }
                             } else {
-                                assert!(false, "alternative should be not none");
+                                assert!(
+                                    false,
+                                    "alternative should be not none"
+                                );
                             }
                         } else {
                             assert!(false, "no statement in consequence");
@@ -1034,7 +1104,10 @@ return 993322;";
                                     ),
                                     true
                                 ),
-                                _ => assert!(false, "Statement is not Expression"),
+                                _ => assert!(
+                                    false,
+                                    "Statement is not Expression"
+                                ),
                             };
                         } else {
                             assert!(false, "no statement in body");
@@ -1105,7 +1178,10 @@ return 993322;";
                         assert_eq!(arguments.len(), 3);
 
                         assert_eq!(
-                            is_expression_literal(&arguments[0], &Literal::Integer(1),),
+                            is_expression_literal(
+                                &arguments[0],
+                                &Literal::Integer(1),
+                            ),
                             true
                         );
                         assert_eq!(
@@ -1156,7 +1232,10 @@ return 993322;";
                     Statement::Expression(expr) => match expr {
                         Expression::Prefix(prefix, right) => {
                             assert_eq!(prefix.to_string(), tt.1);
-                            assert_eq!(is_expression_literal(right, &tt.2), true);
+                            assert_eq!(
+                                is_expression_literal(right, &tt.2),
+                                true
+                            );
                         }
                         _ => assert!(false, "Expression is not Prefix"),
                     },
@@ -1209,9 +1288,15 @@ return 993322;";
                 match stmt {
                     Statement::Expression(expr) => match expr {
                         Expression::Infix(left, infix, right) => {
-                            assert_eq!(is_expression_literal(left, &tt.1), true);
+                            assert_eq!(
+                                is_expression_literal(left, &tt.1),
+                                true
+                            );
                             assert_eq!(infix.to_string(), tt.2);
-                            assert_eq!(is_expression_literal(right, &tt.3), true);
+                            assert_eq!(
+                                is_expression_literal(right, &tt.3),
+                                true
+                            );
                         }
                         _ => assert!(false, "Expression is not Infix"),
                     },

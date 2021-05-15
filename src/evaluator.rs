@@ -25,7 +25,10 @@ impl std::error::Error for EvalError {
 pub struct Evaluator;
 
 impl Evaluator {
-    pub fn eval(program: &Program, env: Rc<RefCell<Environment>>) -> Result<Rc<Object>, EvalError> {
+    pub fn eval(
+        program: &Program,
+        env: Rc<RefCell<Environment>>,
+    ) -> Result<Rc<Object>, EvalError> {
         Self::eval_statements(&program.statements, env)
     }
 
@@ -80,6 +83,9 @@ impl Evaluator {
                 Ok(Rc::new(Object::Return(obj)))
             }
             Statement::Expression(expr) => Self::eval_expression(expr, env),
+            Statement::BlockStatement(stmts) => {
+                Self::eval_statements(&stmts.statements, env)
+            }
         }
     }
 
@@ -101,9 +107,15 @@ impl Evaluator {
                     message: format!("identifier not found: {}", ident),
                 })
             }
-            Expression::Integer(integer) => Ok(Rc::new(Object::Integer(*integer))),
-            Expression::Boolean(boolean) => Ok(Rc::new(Object::Boolean(*boolean))),
-            Expression::String(string) => Ok(Rc::new(Object::String(string.to_string()))),
+            Expression::Integer(integer) => {
+                Ok(Rc::new(Object::Integer(*integer)))
+            }
+            Expression::Boolean(boolean) => {
+                Ok(Rc::new(Object::Boolean(*boolean)))
+            }
+            Expression::String(string) => {
+                Ok(Rc::new(Object::String(string.to_string())))
+            }
             Expression::Prefix(prefix, right) => {
                 let right = Self::eval_expression(right, env)?;
                 Self::eval_prefix_expression(prefix, right)
@@ -114,7 +126,8 @@ impl Evaluator {
                 Self::eval_infix_expression(left, infix, right)
             }
             Expression::If(condition, consequence, alternative) => {
-                let condition = Self::eval_expression(condition, Rc::clone(&env))?;
+                let condition =
+                    Self::eval_expression(condition, Rc::clone(&env))?;
                 if Self::is_truthy(&condition) {
                     Self::eval_block_statements(&consequence.statements, env)
                 } else if let Some(alternative) = alternative {
@@ -123,13 +136,18 @@ impl Evaluator {
                     Ok(Rc::new(Object::Null))
                 }
             }
-            Expression::Function(parameters, body) => Ok(Rc::new(Object::Function(Function {
-                parameters: parameters.clone(),
-                body: body.clone(),
-                env,
-            }))),
+            Expression::Function(parameters, body) => {
+                Ok(Rc::new(Object::Function(Function {
+                    parameters: parameters.clone(),
+                    body: body.clone(),
+                    env,
+                })))
+            }
             Expression::Call(function, arguments) => {
-                let function = Self::eval_expression(function, Rc::clone(&env))?;
+                // TODO: handle quote
+                // handle fn call
+                let function =
+                    Self::eval_expression(function, Rc::clone(&env))?;
                 let args = Self::eval_expressions(arguments, env)?;
                 Self::apply_function(function, args)
             }
@@ -163,14 +181,19 @@ impl Evaluator {
         Ok(results)
     }
 
-    fn eval_prefix_expression(prefix: &Prefix, right: Rc<Object>) -> Result<Rc<Object>, EvalError> {
+    fn eval_prefix_expression(
+        prefix: &Prefix,
+        right: Rc<Object>,
+    ) -> Result<Rc<Object>, EvalError> {
         match prefix {
             &Prefix::BANG => Self::eval_bang_operator_expression(right),
             &Prefix::MINUS => Self::eval_minus_operator_expression(right),
         }
     }
 
-    fn eval_bang_operator_expression(right: Rc<Object>) -> Result<Rc<Object>, EvalError> {
+    fn eval_bang_operator_expression(
+        right: Rc<Object>,
+    ) -> Result<Rc<Object>, EvalError> {
         match &*right {
             Object::Boolean(boolean) => Ok(Rc::new(Object::Boolean(!*boolean))),
             Object::Null => Ok(Rc::new(Object::Boolean(true))),
@@ -178,7 +201,9 @@ impl Evaluator {
         }
     }
 
-    fn eval_minus_operator_expression(right: Rc<Object>) -> Result<Rc<Object>, EvalError> {
+    fn eval_minus_operator_expression(
+        right: Rc<Object>,
+    ) -> Result<Rc<Object>, EvalError> {
         match &*right {
             Object::Integer(integer) => Ok(Rc::new(Object::Integer(-*integer))),
             _ => Err(EvalError {
@@ -200,9 +225,14 @@ impl Evaluator {
                 Self::eval_string_infix_expression(left, infix, right)
             }
             (_, &Infix::EQ, _) => Ok(Rc::new(Object::Boolean(*left == *right))),
-            (_, &Infix::NEQ, _) => Ok(Rc::new(Object::Boolean(*left != *right))),
+            (_, &Infix::NEQ, _) => {
+                Ok(Rc::new(Object::Boolean(*left != *right)))
+            }
             _ => Err(EvalError {
-                message: format!("illegal operator: {} {} {}", left, infix, right),
+                message: format!(
+                    "illegal operator: {} {} {}",
+                    left, infix, right
+                ),
             }),
         }
     }
@@ -215,7 +245,9 @@ impl Evaluator {
             (Object::Array(array), Object::Integer(index)) => {
                 Self::eval_array_index_expression(array, *index)
             }
-            (Object::Hash(hash), _) => Self::eval_hash_index_expression(hash, index),
+            (Object::Hash(hash), _) => {
+                Self::eval_hash_index_expression(hash, index)
+            }
             _ => Err(EvalError {
                 message: format!("index operator not supported: {}", array),
             }),
@@ -265,7 +297,10 @@ impl Evaluator {
             &Infix::PLUS => Object::String(left.to_string() + right),
             _ => {
                 return Err(EvalError {
-                    message: format!("illegal operator: {} {} {}", left, infix, right),
+                    message: format!(
+                        "illegal operator: {} {} {}",
+                        left, infix, right
+                    ),
                 })
             }
         };
@@ -309,10 +344,14 @@ impl Evaluator {
         match &*function {
             Object::Function(function) => {
                 let extended_env = Environment::from(Rc::clone(&function.env));
-                for (param, arg) in function.parameters.iter().zip(args.iter()) {
+                for (param, arg) in function.parameters.iter().zip(args.iter())
+                {
                     extended_env.borrow_mut().set(param.clone(), arg.clone());
                 }
-                let evaluated = Self::eval(&function.body, extended_env)?;
+                let evaluated = Self::eval_statements(
+                    &function.body.statements,
+                    extended_env,
+                )?;
                 match &*evaluated {
                     Object::Return(obj) => Ok(Rc::clone(obj)),
                     _ => Ok(evaluated),
@@ -337,8 +376,8 @@ impl Evaluator {
 #[cfg(test)]
 mod evaluator {
     use super::*;
-    use crate::lexer::*;
     use crate::parser::*;
+    use crate::{ast::Node, lexer::*};
 
     fn is_object_integer(obj: &Object, test: &str, expected: isize) -> bool {
         match obj {
@@ -402,6 +441,29 @@ mod evaluator {
                 assert!(
                     false,
                     "Eval {}, expected String({}), but got {}",
+                    test, expected, obj
+                );
+                false
+            }
+        }
+    }
+
+    fn is_object_quote(obj: &Object, test: &str, expected: &str) -> bool {
+        match obj {
+            Object::QUOTE(node) => {
+                assert!(
+                    node.to_string() == expected,
+                    "Eval {}, expected QUOTE({}), but got {}",
+                    test,
+                    expected,
+                    obj
+                );
+                true
+            }
+            _ => {
+                assert!(
+                    false,
+                    "Eval {}, expected QUOTE({}), but got {}",
                     test, expected, obj
                 );
                 false
@@ -562,9 +624,16 @@ mod evaluator {
                 Object::Null => assert_eq!(tt.1, None),
                 _ => {
                     if let Some(result) = tt.1 {
-                        assert_eq!(is_object_integer(&*evaluated, tt.0, result), true);
+                        assert_eq!(
+                            is_object_integer(&*evaluated, tt.0, result),
+                            true
+                        );
                     } else {
-                        assert!(false, "Wrong result: expected null, but got {}", evaluated);
+                        assert!(
+                            false,
+                            "Wrong result: expected null, but got {}",
+                            evaluated
+                        );
                     }
                 }
             }
@@ -616,7 +685,10 @@ mod evaluator {
             let env = Environment::new();
             let evaluated = Evaluator::eval(&program, env)?;
             if let Some(expected) = tt.1 {
-                assert_eq!(is_object_integer(&*evaluated, tt.0, expected), true);
+                assert_eq!(
+                    is_object_integer(&*evaluated, tt.0, expected),
+                    true
+                );
             } else {
                 assert_eq!(&*evaluated, &Object::Null);
             }
@@ -825,17 +897,35 @@ mod evaluator {
                     match &**key {
                         Object::String(string) => {
                             match string.as_str() {
-                                "one" => assert_eq!(is_object_integer(val, input, 1), true),
-                                "two" => assert_eq!(is_object_integer(val, input, 2), true),
-                                _ => assert!(false, "{} not found in {}", string, input),
+                                "one" => assert_eq!(
+                                    is_object_integer(val, input, 1),
+                                    true
+                                ),
+                                "two" => assert_eq!(
+                                    is_object_integer(val, input, 2),
+                                    true
+                                ),
+                                _ => assert!(
+                                    false,
+                                    "{} not found in {}",
+                                    string, input
+                                ),
                             };
                         }
-                        Object::Integer(4) => assert_eq!(is_object_integer(val, input, 4), true),
-                        Object::Boolean(true) => assert_eq!(is_object_integer(val, input, 5), true),
+                        Object::Integer(4) => {
+                            assert_eq!(is_object_integer(val, input, 4), true)
+                        }
+                        Object::Boolean(true) => {
+                            assert_eq!(is_object_integer(val, input, 5), true)
+                        }
                         Object::Boolean(false) => {
                             assert_eq!(is_object_integer(val, input, 6), true)
                         }
-                        _ => assert!(false, "{}: {} not found in {}", key, val, input),
+                        _ => assert!(
+                            false,
+                            "{}: {} not found in {}",
+                            key, val, input
+                        ),
                     };
                 }
             }
@@ -864,10 +954,32 @@ mod evaluator {
             let env = Environment::new();
             let evaluated = Evaluator::eval(&program, env)?;
             if let Some(expected) = tt.1 {
-                assert_eq!(is_object_integer(&*evaluated, tt.0, expected), true);
+                assert_eq!(
+                    is_object_integer(&*evaluated, tt.0, expected),
+                    true
+                );
             } else {
                 assert_eq!(&*evaluated, &Object::Null);
             }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn test_quote() -> Result<(), EvalError> {
+        let tests = vec![
+            ("quote(5)", "5"),
+            ("quote(foobar)", "foobar"),
+            ("quote(foo + bar)", "foo + bar"),
+        ];
+
+        for (input, expected) in tests {
+            let l = Lexer::new(input);
+            let mut p = Parser::new(l);
+            let program = p.parse_program();
+            let env = Environment::new();
+            let evaluated = Evaluator::eval(&program, env)?;
+            assert!(is_object_quote(&evaluated, input, expected));
         }
         Ok(())
     }

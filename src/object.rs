@@ -1,5 +1,11 @@
-use crate::{ast::BlockStatement, environment::Environment, evaluator::EvalError};
-use std::{cell::RefCell, collections::HashMap, fmt, hash::Hash, hash::Hasher, rc::Rc};
+use crate::{
+    ast::{BlockStatement, Node},
+    environment::Environment,
+    evaluator::EvalError,
+};
+use std::{
+    cell::RefCell, collections::HashMap, fmt, hash::Hash, hash::Hasher, rc::Rc,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Object {
@@ -12,6 +18,7 @@ pub enum Object {
     Function(Function),
     Builtin(Builtin),
     Hash(HashObject),
+    QUOTE(Node),
 }
 
 impl fmt::Display for Object {
@@ -30,6 +37,7 @@ impl fmt::Display for Object {
             Object::Function(function) => format!("{}", function),
             Object::Builtin(builtin) => format!("{:?}", builtin),
             Object::Hash(hash) => format!("{}", hash),
+            Object::QUOTE(node) => format!("QUATE({})", node),
         };
         write!(f, "{}", s)
     }
@@ -68,7 +76,9 @@ impl fmt::Display for HashObject {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let pairs: Vec<String> = (&self.pairs)
             .iter()
-            .map(|(key, value)| format!("{}: {}", key.to_string(), value.to_string()))
+            .map(|(key, value)| {
+                format!("{}: {}", key.to_string(), value.to_string())
+            })
             .collect();
         write!(f, "{{{}}}", pairs.join(", "))
     }
@@ -108,22 +118,35 @@ impl Builtin {
             Builtin::Len => {
                 if args.len() != 1 {
                     return Err(EvalError {
-                        message: format!("wrong number of arguments. got={}, want=1", args.len()),
+                        message: format!(
+                            "wrong number of arguments. got={}, want=1",
+                            args.len()
+                        ),
                     });
                 }
 
                 match &*args[0] {
-                    Object::Array(array) => Ok(Rc::new(Object::Integer(array.len() as isize))),
-                    Object::String(string) => Ok(Rc::new(Object::Integer(string.len() as isize))),
+                    Object::Array(array) => {
+                        Ok(Rc::new(Object::Integer(array.len() as isize)))
+                    }
+                    Object::String(string) => {
+                        Ok(Rc::new(Object::Integer(string.len() as isize)))
+                    }
                     _ => Err(EvalError {
-                        message: format!("argument to \"len\" not supported, got {}", args[0]),
+                        message: format!(
+                            "argument to \"len\" not supported, got {}",
+                            args[0]
+                        ),
                     }),
                 }
             }
             Builtin::First => {
                 if args.len() != 1 {
                     return Err(EvalError {
-                        message: format!("wrong number of arguments. got={}, want=1", args.len()),
+                        message: format!(
+                            "wrong number of arguments. got={}, want=1",
+                            args.len()
+                        ),
                     });
                 }
 
@@ -136,14 +159,20 @@ impl Builtin {
                         }
                     }
                     _ => Err(EvalError {
-                        message: format!("argument to \"first\" not supported, got {}", args[0]),
+                        message: format!(
+                            "argument to \"first\" not supported, got {}",
+                            args[0]
+                        ),
                     }),
                 }
             }
             Builtin::Last => {
                 if args.len() != 1 {
                     return Err(EvalError {
-                        message: format!("wrong number of arguments. got={}, want=1", args.len()),
+                        message: format!(
+                            "wrong number of arguments. got={}, want=1",
+                            args.len()
+                        ),
                     });
                 }
 
@@ -156,14 +185,20 @@ impl Builtin {
                         }
                     }
                     _ => Err(EvalError {
-                        message: format!("argument to \"last\" not supported, got {}", args[0]),
+                        message: format!(
+                            "argument to \"last\" not supported, got {}",
+                            args[0]
+                        ),
                     }),
                 }
             }
             Builtin::Rest => {
                 if args.len() != 1 {
                     return Err(EvalError {
-                        message: format!("wrong number of arguments. got={}, want=1", args.len()),
+                        message: format!(
+                            "wrong number of arguments. got={}, want=1",
+                            args.len()
+                        ),
                     });
                 }
 
@@ -180,14 +215,20 @@ impl Builtin {
                         }
                     }
                     _ => Err(EvalError {
-                        message: format!("argument to \"rest\" not supported, got {}", args[0]),
+                        message: format!(
+                            "argument to \"rest\" not supported, got {}",
+                            args[0]
+                        ),
                     }),
                 }
             }
             Builtin::Push => {
                 if args.len() != 2 {
                     return Err(EvalError {
-                        message: format!("wrong number of arguments. got={}, want=2", args.len()),
+                        message: format!(
+                            "wrong number of arguments. got={}, want=2",
+                            args.len()
+                        ),
                     });
                 }
 
@@ -205,7 +246,10 @@ impl Builtin {
                         }
                     }
                     _ => Err(EvalError {
-                        message: format!("argument to \"push\" not supported, got {}", args[0]),
+                        message: format!(
+                            "argument to \"push\" not supported, got {}",
+                            args[0]
+                        ),
                     }),
                 }
             }

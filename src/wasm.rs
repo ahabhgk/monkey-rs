@@ -1,4 +1,7 @@
-use crate::{environment::Environment, evaluator::Evaluator, lexer::Lexer, parser::Parser};
+use crate::{
+    environment::Environment, evaluator::Evaluator, lexer::Lexer,
+    parser::Parser,
+};
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
